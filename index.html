@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensaje para mi amor ♡</title>
+    <link rel="icon" href="resources/escribiendo.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #ffecd2 100%);
+            padding: 1.5rem;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: #ff85c0;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ffb3d9;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input[type="password"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #ff85c0;
+            box-shadow: 0 0 0 3px rgba(255, 179, 217, 0.2);
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 0.3rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #ff9a9e 0%, #ff85c0 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 133, 192, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 133, 192, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .emoji {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .hint {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="emoji">💌</div>
+        <h1>Enviar mensaje</h1>
+        <p class="subtitle">Deja un mensaje especial para tu amor</p>
+
+        <div id="messageAlert" class="message"></div>
+
+        <form id="messageForm">
+            <div class="form-group">
+                <label for="password">Contraseña secreta:</label>
+                <input type="password" id="password" placeholder="Ingresa la contraseña" required>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Tu mensaje:</label>
+                <textarea id="message" placeholder="Escribe algo lindo..." required maxlength="500"></textarea>
+                <div class="char-count"><span id="charCount">0</span>/500</div>
+            </div>
+
+            <button type="submit" id="submitBtn">
+                Enviar mensaje ♡
+            </button>
+        </form>
+
+        <p class="hint">Los mensajes aparecerán automáticamente en su página ✨</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBahbXLI983KDidcMFZgLQExA-taj-JT0A",
+            authDomain: "eva-messages-234c6.firebaseapp.com",
+            projectId: "eva-messages-234c6",
+            storageBucket: "eva-messages-234c6.firebasestorage.app",
+            messagingSenderId: "358755563542",
+            appId: "1:358755563542:web:6d61c083e8d93eea535d37"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Sistema de verificación ofuscado
+        const _0x4a2b = ['101','118','97','109','105','97','109','111','114','50','48','50','54'];
+        const _0x3c1d = (s) => s.split('').map(c => c.charCodeAt(0));
+        const _0x2e9f = (a) => a.map(x => String.fromCharCode(parseInt(x))).join('');
+        const _0x5b8c = _0x2e9f(_0x4a2b);
+        const _0x7d4e = (i, k) => {
+            let r = '';
+            for(let j = 0; j < i.length; j++) {
+                r += String.fromCharCode(i.charCodeAt(j) ^ k.charCodeAt(j % k.length));
+            }
+            return r;
+        };
+        const _0x9a6f = btoa(_0x5b8c).split('').reverse().join('');
+        
+        function _0x1f3b(input) {
+            const t1 = btoa(input);
+            const t2 = t1.split('').reverse().join('');
+            return t2 === _0x9a6f;
+        }
+
+        const form = document.getElementById('messageForm');
+        const messageInput = document.getElementById('message');
+        const passwordInput = document.getElementById('password');
+        const charCount = document.getElementById('charCount');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageAlert = document.getElementById('messageAlert');
+
+        // Contador de caracteres
+        messageInput.addEventListener('input', () => {
+            charCount.textContent = messageInput.value.length;
+        });
+
+        // Función para mostrar alertas
+        function showAlert(message, type) {
+            messageAlert.textContent = message;
+            messageAlert.className = `message ${type} show`;
+            setTimeout(() => {
+                messageAlert.classList.remove('show');
+            }, 5000);
+        }
+
+        // Enviar mensaje
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const password = passwordInput.value.trim();
+            const message = messageInput.value.trim();
+
+            // Validar contraseña
+            if (!_0x1f3b(password)) {
+                showAlert('❌ Contraseña incorrecta', 'error');
+                passwordInput.value = '';
+                passwordInput.focus();
+                return;
+            }
+
+            // Validar mensaje
+            if (message.length < 1) {
+                showAlert('❌ El mensaje está vacío', 'error');
+                return;
+            }
+
+            // Deshabilitar botón mientras se envía
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Enviando...';
+
+            try {
+                // Guardar en Firestore
+                await addDoc(collection(db, 'eva_messages'), {
+                    message: message,
+                    timestamp: serverTimestamp(),
+                    read: false
+                });
+
+                showAlert('✅ ¡Mensaje enviado con amor! 💕', 'success');
+                
+                // Limpiar formulario
+                messageInput.value = '';
+                passwordInput.value = '';
+                charCount.textContent = '0';
+                
+                // Añadir confetti o animación
+                createHearts();
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('❌ Error al enviar. Intenta de nuevo.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Enviar mensaje ♡';
+            }
+        });
+
+        // Animación de corazones al enviar
+        function createHearts() {
+            const colors = ['#ff9a9e', '#fecfef', '#ff85c0', '#ffb3d9'];
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.textContent = '💕';
+                    heart.style.position = 'fixed';
+                    heart.style.left = Math.random() * window.innerWidth + 'px';
+                    heart.style.top = window.innerHeight + 'px';
+                    heart.style.fontSize = (Math.random() * 30 + 20) + 'px';
+                    heart.style.opacity = '1';
+                    heart.style.transition = 'all 3s ease-out';
+                    heart.style.pointerEvents = 'none';
+                    heart.style.zIndex = '10000';
+                    
+                    document.body.appendChild(heart);
+                    
+                    setTimeout(() => {
+                        heart.style.top = '-100px';
+                        heart.style.opacity = '0';
+                        heart.style.transform = `translateX(${Math.random() * 200 - 100}px) rotate(${Math.random() * 360}deg)`;
+                    }, 100);
+                    
+                    setTimeout(() => heart.remove(), 3100);
+                }, i * 100);
+            }
+        }
+    </script>
+</body>
+</html>
